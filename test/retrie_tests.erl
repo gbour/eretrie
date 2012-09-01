@@ -283,3 +283,77 @@ merge_test_() ->
 
 	] end}.
 
+match_test_() ->
+	{"left is regex, right is matched string", [
+
+		{"a vs a", ?_assertEqual(true, retrie:match("a","a"))},
+		{"a vs b", ?_assertEqual(false, retrie:match("a","b"))},
+		{"a vs aa", ?_assertEqual(false, retrie:match("a","aa"))},
+
+		{"aa vs a",    ?_assertEqual(false, retrie:match("aa","a"))},
+		{"aa vs b",    ?_assertEqual(false, retrie:match("aa", "b"))},
+		{"aa vs aa",   ?_assertEqual(true, retrie:match("aa","aa"))},
+
+		{"a? vs empty"    , ?_assertEqual(true , retrie:match("a?", ""))},
+		{"a? vs a"        , ?_assertEqual(true , retrie:match("a?", "a"))},
+		{"a? vs aa"       , ?_assertEqual(false, retrie:match("a?", "aa"))},
+		{"a? vs b"        , ?_assertEqual(false, retrie:match("a?", "b"))},
+
+		{"a* vs empty"    , ?_assertEqual(true , retrie:match("a*", ""))},
+		{"a* vs a"        , ?_assertEqual(true , retrie:match("a*", "a"))},
+		{"a* vs aa"       , ?_assertEqual(true , retrie:match("a*", "aa"))},
+		{"a* vs aaa"      , ?_assertEqual(true , retrie:match("a*", "aaa"))},
+		{"a* vs b"        , ?_assertEqual(false, retrie:match("a*", "b"))},
+		{"a* vs ab"       , ?_assertEqual(false, retrie:match("a*", "ab"))},
+
+		{"a+ vs empty"    , ?_assertEqual(false, retrie:match("a+", ""))},
+		{"a+ vs a"        , ?_assertEqual(true , retrie:match("a+", "a"))},
+		{"a+ vs aa"       , ?_assertEqual(true , retrie:match("a+", "aa"))},
+		{"a+ vs aaa"      , ?_assertEqual(true , retrie:match("a+", "aaa"))},
+		{"a+ vs b"        , ?_assertEqual(false, retrie:match("a+", "b"))},
+		{"a+ vs ab"       , ?_assertEqual(false, retrie:match("a+", "ab"))},
+
+		{"composition", [
+			{"ab vs ab"   , ?_assertEqual(true , retrie:match("ab", "ab"))},
+			{"ab vs a"    , ?_assertEqual(false, retrie:match("ab", "a"))},
+			{"ab vs b"    , ?_assertEqual(false, retrie:match("ab", "b"))},
+			{"ab vs aa"   , ?_assertEqual(false, retrie:match("ab", "aa"))},
+			{"ab vs bb"   , ?_assertEqual(false, retrie:match("ab", "bb"))},
+			{"ab vs aab"  , ?_assertEqual(false, retrie:match("ab", "aab"))},
+			{"ab vs abc"  , ?_assertEqual(false, retrie:match("ab", "abc"))},
+
+			{"a?b vs ab"   , ?_assertEqual(true , retrie:match("a?b", "ab"))},
+			{"a?b vs b"    , ?_assertEqual(true , retrie:match("a?b", "b"))},
+			{"a?b vs a"    , ?_assertEqual(false, retrie:match("a?b", "a"))},
+			{"a?b vs aa"   , ?_assertEqual(false, retrie:match("a?b", "aa"))},
+			{"a?b vs bb"   , ?_assertEqual(false, retrie:match("a?b", "bb"))},
+			{"a?b vs aab"  , ?_assertEqual(false, retrie:match("a?b", "aab"))},
+			{"a?b vs abc"  , ?_assertEqual(false, retrie:match("a?b", "abc"))},
+
+			{"a*b vs ab"   , ?_assertEqual(true , retrie:match("a*b", "ab"))},
+			{"a*b vs b"    , ?_assertEqual(true , retrie:match("a*b", "b"))},
+			{"a*b vs a"    , ?_assertEqual(false, retrie:match("a*b", "a"))},
+			{"a*b vs aa"   , ?_assertEqual(false, retrie:match("a*b", "aa"))},
+			{"a*b vs bb"   , ?_assertEqual(false, retrie:match("a*b", "bb"))},
+			{"a*b vs aab"  , ?_assertEqual(true , retrie:match("a*b", "aab"))},
+			{"a*b vs abc"  , ?_assertEqual(false, retrie:match("a*b", "abc"))},
+
+			{"a+b vs ab"   , ?_assertEqual(true , retrie:match("a+b", "ab"))},
+			{"a+b vs b"    , ?_assertEqual(false, retrie:match("a+b", "b"))},
+			{"a+b vs a"    , ?_assertEqual(false, retrie:match("a+b", "a"))},
+			{"a+b vs aa"   , ?_assertEqual(false, retrie:match("a+b", "aa"))},
+			{"a+b vs bb"   , ?_assertEqual(false, retrie:match("a+b", "bb"))},
+			{"a+b vs aab"  , ?_assertEqual(true , retrie:match("a+b", "aab"))},
+			{"a+b vs abc"  , ?_assertEqual(false, retrie:match("a+b", "abc"))}
+		]},
+
+		% not working: returns [true] at now
+		{"branching", [
+			{"a U b"       , ?_assertEqual(true , retrie:match(retrie:merge("a","b"), "a"))}
+		]};
+
+		% does not work at now
+		{"backtracking", [
+			{"a*b?a vs a"  , ?_assertEqual(true , retrie:match("a*b?a", "a"))}
+		]}
+	]}.

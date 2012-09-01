@@ -18,7 +18,7 @@
 -module(retrie).
 -author("Guillaume Bour <guillaume@bour.cc>").
 
--export([encode/1, reduce/1, merge/2]).
+-export([encode/1, reduce/1, merge/2, match/2]).
 -ifdef(TEST).
 	-export([encode/2]).
 -endif.
@@ -151,4 +151,53 @@ merge([N1=#node{s=S}|Re1],[N2=#node{s=S}|Re2], Acc) ->
 % 0 u 1 -> branch
 merge(Re1, Re2, Acc) ->
 	[#branch{nodes=[Re1, Re2]}|Acc].
+
+%% @doc match string with retrie
+%%
+match({retrie, Re}, String) ->
+	match(Re, String, [false]);
+match(Re, String) ->
+	[H|T] = match(reduce(encode(Re)), String),
+	H.
+
+% terminal steps
+match([], [S|Rest], _) ->
+	[false];
+match([#node{min=0, do=Do}|Re]  , [], State) ->
+	% if 'do' is not empty, node is a terminal one,
+	% so we are allowed to exit
+	case length(Do) of
+		0 -> match(Re, [], Do);
+		_ -> Do
+	end;
+match([#node{min=Min}|Re], [], _)     ->
+	[false];
+match([],[], State) ->
+	State;
+
+match([#node{s=S,max=1,do=Do}|Re], [S|Rest], State) ->
+	match(Re, Rest, Do);
+match([N=#node{s=S,min=0,max=0}|Re], [S|Rest], State) ->
+	match(Re, [S|Rest], State);
+match([N=#node{s=S,min=0,max=Max}|Re], [S|Rest], State) ->
+	match([N#node{max=sub(Max,1)}|Re], Rest, State);
+match([N=#node{s=S,min=Min,max=Max}|Re], [S|Rest], State) ->
+	match([N#node{min=sub(Min,1),max=sub(Max,1)}|Re], Rest, State);
+
+match([#node{min=0}|Re], [S|Rest], State) ->
+	match(Re, [S|Rest], State);
+
+match([#branch{nodes=[]}], _, _) ->
+	[false];
+match([#branch{nodes=[N|Tail]}], String, State) ->
+	case match(N, String, State) of
+		% try next leaf
+		[false] -> match([#branch{nodes=Tail}], String, State);
+		BState  -> BState
+	end;
+
+% re top-node does not match string left-most character
+match(_,_,_) ->
+	[false].
+
 
