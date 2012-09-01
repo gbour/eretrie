@@ -111,7 +111,7 @@ merge([N1=#node{s=S,min=Min1,max=Max1,do=Do1}|Re1],[N2=#node{s=S,min=Min1,max=Ma
 			merge([], [RightP], Acc2);
 		{L1,L2} ->
 
-			Nodes1 = [merge([], [RightP | Re2])],
+			Nodes1 = [lists:reverse(merge([], [RightP | Re2], []))],
 			Nodes2 = if L2 > 0 -> [Re2]++Nodes1 end,
 			Nodes3 = if L1 > 0 -> [Re1]++Nodes2 end,
 
@@ -139,7 +139,7 @@ merge([N1=#node{s=S,min=Min1,max=Max1}|Re1],[N2=#node{s=S,min=Min2,max=Max2}|Re2
 
 	case length(Re1) of
 		0 -> merge(LeftP, RightP, Acc2);
-		_ -> [#branch{nodes=[Re1, merge(LeftP, RightP)]} | Acc2]
+		_ -> [#branch{nodes=[Re1, lists:reverse(merge(LeftP, RightP, []))]} | Acc2]
 	end;
 merge([N1=#node{s=S}|Re1],[N2=#node{s=S}|Re2], Acc) ->
 	% swich Re's
