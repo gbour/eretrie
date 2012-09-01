@@ -38,24 +38,27 @@ sub(A,B)         -> A-B.
 %% @doc Encode regex
 %%
 encode(Re) ->
-	lists:reverse(encode(Re, [])).
+	encode(Re, true).
+encode(Re, Do) ->
+	[Last|Trie] = encode_(Re, []),
+	{retrie, lists:reverse([Last#node{do=[Do]}|Trie])}.
 
-encode([], Re) ->
+encode_([], Re) ->
 	Re;
-encode([$?|T], [H|Re]) ->
-	encode(T, [H#node{min=0,max=1} |Re]);
-encode([$*|T], [H|Re]) ->
-	encode(T, [H#node{max=infinity,min=0} |Re]);
-encode([$+|T], [H|Re]) ->
-	encode(T, [H#node{min=1,max=infinity} | Re]);
-encode([H|T], Re) ->
-	encode(T, [#node{s=H} |Re]).
+encode_([$?|T], [H|Re]) ->
+	encode_(T, [H#node{min=0,max=1} |Re]);
+encode_([$*|T], [H|Re]) ->
+	encode_(T, [H#node{max=infinity,min=0} |Re]);
+encode_([$+|T], [H|Re]) ->
+	encode_(T, [H#node{min=1,max=infinity} | Re]);
+encode_([H|T], Re) ->
+	encode_(T, [#node{s=H} |Re]).
 
 %% @doc Reduce regex trie
 %%
 -spec reduce([#node{}]) -> [#node{}].
-reduce(Re) ->
-	lists:reverse(reduce(Re, #node{}, [])).
+reduce({retrie, Re}) ->
+	{retrie, lists:reverse(reduce(Re, #node{}, []))}.
 
 reduce([], N, Re) ->
 	lists:sublist([N|Re], length(Re));
@@ -66,8 +69,14 @@ reduce([N|T], Prev, Re) ->
 
 %% @doc merge 2 retrie
 %%
+merge({retrie, Re1}, {retrie, Re2}) ->
+	{retrie, lists:reverse(merge(Re1, Re2, []))};
+merge({retrie, Re1}, Re2) ->
+	merge({retrie, Re1}, reduce(encode(Re1)));
+merge(Re1, {retrie, Re2}) ->
+	merge({retrie, Re2}, Re1);
 merge(Re1, Re2) ->
-	lists:reverse(merge(Re1, Re2, [])).
+	merge(reduce(encode(Re1)), reduce(encode(Re2))).
 
 merge([], [], Acc)     ->
 	Acc;
