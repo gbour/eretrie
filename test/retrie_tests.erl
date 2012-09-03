@@ -348,7 +348,29 @@ match_test_() ->
 		]},
 
 		{"branching", [
-			{"a U b"       , ?_assertEqual(true , retrie:match(retrie:merge("a","b"), "a"))}
+			{"a U b vs a"  , ?_assertEqual(true , retrie:match(retrie:merge("a","b"), "a"))},
+			{"a U b vs b"  , ?_assertEqual(true , retrie:match(retrie:merge("a","b"), "b"))},
+			{"a U b vs c"  , ?_assertEqual(false, retrie:match(retrie:merge("a","b"), "c"))},
+			{"a U b vs ac" , ?_assertEqual(false, retrie:match(retrie:merge("a","b"), "ac"))},
+
+			{"ac U b vs a"  , ?_assertEqual(false, retrie:match(retrie:merge("ac","b"), "a"))},
+			{"ac U b vs b"  , ?_assertEqual(true , retrie:match(retrie:merge("ac","b"), "b"))},
+			{"ac U b vs c"  , ?_assertEqual(false, retrie:match(retrie:merge("ac","b"), "c"))},
+			{"ac U b vs ac" , ?_assertEqual(true , retrie:match(retrie:merge("ac","b"), "ac"))}, 
+
+			{"a?b U a?c vs a"          , ?_assertEqual(false, retrie:match(retrie:merge("a?b","a?c"), "a"))},
+			{"a?b U a?c vs b"          , ?_assertEqual(true , retrie:match(retrie:merge("a?b","a?c"), "b"))},
+			{"a?b U a?c vs c"          , ?_assertEqual(true , retrie:match(retrie:merge("a?b","a?c"), "c"))},
+			{"a?b U a?c vs ab"         , ?_assertEqual(true , retrie:match(retrie:merge("a?b","a?c"), "ab"))},
+			{"a?b U a?c vs ac"         , ?_assertEqual(true , retrie:match(retrie:merge("a?b","a?c"), "ac"))},
+
+			{"a*b U a+c vs a"          , ?_assertEqual(false, retrie:match(retrie:merge("a*b","a+c"), "a"))},
+			{"a*b U a+c vs b"          , ?_assertEqual(true , retrie:match(retrie:merge("a*b","a+c"), "b"))},
+			{"a*b U a+c vs c"          , ?_assertEqual(false, retrie:match(retrie:merge("a*b","a+c"), "c"))},
+			{"a*b U a+c vs ab"         , ?_assertEqual(true , retrie:match(retrie:merge("a*b","a+c"), "ab"))},
+			{"a*b U a+c vs ac"         , ?_assertEqual(true , retrie:match(retrie:merge("a*b","a+c"), "ac"))},
+			{"a*b U a+c vs aab"        , ?_assertEqual(true , retrie:match(retrie:merge("a*b","a+c"), "aab"))},
+			{"a*b U a+c vs aac"        , ?_assertEqual(true , retrie:match(retrie:merge("a*b","a+c"), "aac"))}
 		]},
 
 		% does not work at now
