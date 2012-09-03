@@ -5,13 +5,13 @@
 -include("retrie.hrl").
 
 encode_test() ->
-	?assertEqual({retrie, [#node{s=$a,min=1,max=1,do=[true]}]}       , retrie:encode("a")),
-	?assertEqual({retrie, [#node{s=$a,min=0,max=1,do=[true]}]}       , retrie:encode("a?")),
-	?assertEqual({retrie, [#node{s=$a,min=0,max=infinity,do=[true]}]}, retrie:encode("a*")),
-	?assertEqual({retrie, [#node{s=$a,min=1,max=infinity,do=[true]}]}, retrie:encode("a+")),
+	?assertEqual({retrie, [#node{s=$a,min=1,max=1,do=true}]}       , retrie:encode("a")),
+	?assertEqual({retrie, [#node{s=$a,min=0,max=1,do=true}]}       , retrie:encode("a?")),
+	?assertEqual({retrie, [#node{s=$a,min=0,max=infinity,do=true}]}, retrie:encode("a*")),
+	?assertEqual({retrie, [#node{s=$a,min=1,max=infinity,do=true}]}, retrie:encode("a+")),
 
-	?assertEqual({retrie, [#node{s=$a,min=1,max=1}, #node{s=$a,min=1,max=1,do=[true]}]}, retrie:encode("aa")),
-	?assertEqual({retrie, [#node{s=$a,min=1,max=1}, #node{s=$b,min=1,max=1,do=[true]}]}, retrie:encode("ab")),
+	?assertEqual({retrie, [#node{s=$a,min=1,max=1}, #node{s=$a,min=1,max=1,do=true}]}, retrie:encode("aa")),
+	?assertEqual({retrie, [#node{s=$a,min=1,max=1}, #node{s=$b,min=1,max=1,do=true}]}, retrie:encode("ab")),
 	ok.
 
 reduce_test() ->
@@ -347,7 +347,6 @@ match_test_() ->
 			{"a+b vs abc"  , ?_assertEqual(false, retrie:match("a+b", "abc"))}
 		]},
 
-		% not working: returns [true] at now
 		{"branching", [
 			{"a U b"       , ?_assertEqual(true , retrie:match(retrie:merge("a","b"), "a"))}
 		]},

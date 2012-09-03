@@ -25,7 +25,9 @@
 
 -include("retrie.hrl").
 
-%% utils
+%% internal utils funs
+%%
+%% infinity-compatible addition/substraction
 %%
 add(infinity, _) -> infinity;
 add(_, infinity) ->	infinity;
@@ -35,13 +37,19 @@ sub(infinity, _) -> infinity;
 sub(_, infinity) -> error;
 sub(A,B)         -> A-B.
 
+merge_do(true, _)      -> true;
+merge_do(_, true)      -> true;
+merge_do(A, undefined) -> A;
+merge_do(undefined, B) -> B;
+merge_do(A, B)         -> A++B.
+
 %% @doc Encode regex
 %%
 encode(Re) ->
 	encode(Re, true).
 encode(Re, Do) ->
 	[Last|Trie] = encode_(Re, []),
-	{retrie, lists:reverse([Last#node{do=[Do]}|Trie])}.
+	{retrie, lists:reverse([Last#node{do=Do}|Trie])}.
 
 encode_([], Re) ->
 	Re;
@@ -90,7 +98,7 @@ merge([], [N|Re], Acc) ->
 %
 % 0 u 0 -> 0
 merge([N1=#node{s=S,min=Min,max=Max,do=Do1}|Re1], [#node{s=S,min=Min,max=Max,do=Do2}|Re2], Acc) ->
-	merge(Re1, Re2, [N1#node{do=Do1++Do2}|Acc]);
+	merge(Re1, Re2, [N1#node{do=merge_do(Do1,Do2)}|Acc]);
 
 % EXCLUSIVE
 merge([N1=#node{s=S,min=Min1,max=Max1}|Re1], [N2=#node{s=S,max=Max2}|Re2], Acc) when Min1 > Max2 ->
@@ -103,7 +111,7 @@ merge([N1=#node{s=S,max=Max1}|Re1], [N2=#node{s=S,min=Min2,max=Max2}|Re2], Acc) 
 % 0 u 0+ -> O(empty u 0+)
 merge([N1=#node{s=S,min=Min1,max=Max1,do=Do1}|Re1],[N2=#node{s=S,min=Min1,max=Max2,do=Do2}|Re2], Acc) when Max1 < Max2 ->
 	%merge(Re1, [N2#node{min=1,max=Max2-Max1}|Re2], [N1#node{do=Do1++Do2}|Acc]);
-	Acc2   = [N1#node{do=Do1++Do2}|Acc],
+	Acc2   = [N1#node{do=merge_do(Do1,Do2)}|Acc],
 	RightP = N2#node{min=1,max=sub(Max2,Max1)},
 
 	case {length(Re1), length(Re2)} of
@@ -155,23 +163,22 @@ merge(Re1, Re2, Acc) ->
 %% @doc match string with retrie
 %%
 match({retrie, Re}, String) ->
-	match(Re, String, [false]);
+	match(Re, String, false);
 match(Re, String) ->
-	[H|T] = match(reduce(encode(Re)), String),
-	H.
+	match(reduce(encode(Re)), String).
 
 % terminal steps
 match([], [S|Rest], _) ->
-	[false];
+	false;
 match([#node{min=0, do=Do}|Re]  , [], State) ->
-	% if 'do' is not empty, node is a terminal one,
-	% so we are allowed to exit
-	case length(Do) of
-		0 -> match(Re, [], Do);
-		_ -> Do
+	% if 'do' is not undefined, node is a terminal one,
+	% so we are allowed to exit with Do value
+	case Do of
+		undefined -> match(Re, [], Do);
+		_         -> Do
 	end;
 match([#node{min=Min}|Re], [], _)     ->
-	[false];
+	false;
 match([],[], State) ->
 	State;
 
@@ -188,16 +195,16 @@ match([#node{min=0}|Re], [S|Rest], State) ->
 	match(Re, [S|Rest], State);
 
 match([#branch{nodes=[]}], _, _) ->
-	[false];
+	false;
 match([#branch{nodes=[N|Tail]}], String, State) ->
 	case match(N, String, State) of
 		% try next leaf
-		[false] -> match([#branch{nodes=Tail}], String, State);
-		BState  -> BState
+		false  -> match([#branch{nodes=Tail}], String, State);
+		BState -> BState
 	end;
 
 % re top-node does not match string left-most character
 match(_,_,_) ->
-	[false].
+	false.
 
 

@@ -17,15 +17,15 @@
 
 -record(node, {
 	% symbol
-	s      = $\0   :: char(),
-	min    = 1     :: infinity|integer(),  
-	max    = 1     :: infinity|integer(),  
-	% list of ordered callbacks:
+	s      = $\0         :: char(),
+	min    = 1           :: infinity|integer(),  
+	max    = 1           :: infinity|integer(),  
+	% either boolean (true/false) or list of ordered callbacks:
 	% [{10, M, F, A}, {15, M, F, A}, ...]
-	do     = []    :: list()
+	do     = undefined   :: undefined|binary()|list()
 }).
 
 -record(branch, {
-	nodes  = []    :: list()
+	nodes  = []          :: list()
 }).
 
