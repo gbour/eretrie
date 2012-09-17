@@ -12,6 +12,7 @@ export CC BEAMDIR EFLAGS
 all: src
 
 src:
+	@- test ! -d ebin && mkdir ebin
 	@$(MAKE) -C src/
 
 test: all
